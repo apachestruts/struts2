@@ -1,6 +1,6 @@
 INFORMATION
 ===========
-- This is Struts 2's "Blank Convetion" Maven Archetype
+- This is Struts 2's "Blank Convention" Maven Archetype
 
 USAGE
 =====
