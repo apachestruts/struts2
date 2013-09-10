@@ -18,17 +18,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package ${package}.actions;
+angular.module('angularstruts', [], function ($routeProvider) {
+    $routeProvider.when('/projects', {
+        templateUrl: '/partials/projects.html',
+        controller: ApacheProjectsController
+    }).when('/home', {
+        templateUrl: '/partials/home.html',
+        controller: HomeController
+    }).otherwise({ redirectTo: '/home' });
+});
 
-import com.opensymphony.xwork2.ActionSupport;
-import org.apache.struts2.StrutsTestCase;
-
-public class IndexTest extends StrutsTestCase {
-
-    public void testIndex() throws Exception {
-        Index index = new Index();
-        String result = index.execute();
-        assertTrue("Expected a success result!", ActionSupport.SUCCESS.equals(result));
-        assertTrue("Expected the 'hello' action name!!", "hello".equals(index.getRedirectName()));
-    }
-}
+angular.element(document).ready(function () {
+    angular.bootstrap(document, ['angularstruts']);
+});

@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!--
 /*
- * $Id: site.xml 1082279 2011-03-16 19:43:51Z lukaszlenart $
+ * $Id$
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,28 +18,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
--->
-<project name="Struts 2">
-    <bannerLeft>
-        <name>Apache Software Foundation</name>
-        <src>http://www.apache.org/images/asf-logo.gif</src>
-        <href>http://www.apache.org/</href>
-    </bannerLeft>
-    <bannerRight>
-        <name>Apache Struts</name>
-        <src>http://struts.apache.org/images/struts.gif</src>
-        <href>http://struts.apache.org/</href>
-    </bannerRight>
-    <body>
-        <links>
-            <item name="Apache"
-                  href="http://www.apache.org/"/>
-            <item name="Struts"
-                  href="http://struts.apache.org/index.html"/>
-        </links>
+function AppController($scope) { }
+AppController.$inject = ['$scope'];
 
-        <menu ref="parent"/>
-        <menu ref="reports"/>
+function HomeController($scope) {
+    $scope.name = "Sunshine";
+}
+HomeController.$inject = ['$scope'];
 
-    </body>
-</project>
+function ApacheProjectsController($scope, $http) {
+    this.init = function() {
+        $http({method: 'GET', url: '/projects'}).
+          success(function(data) {
+            $scope.projects = data.projectNames;
+          }).
+          error(function(data, status, headers, config) {
+            alert("Could not receive project names");
+          });
+    };
+
+    this.init();
+}
+ApacheProjectsController.$inject = ['$scope', '$http'];
