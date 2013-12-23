@@ -95,6 +95,7 @@ public class JSONUtil {
      * Serializes an object into JSON, excluding any properties matching any of
      * the regular expressions in the given collection.
      *
+     *
      * @param object
      *            to be serialized
      * @param excludeProperties
@@ -104,15 +105,17 @@ public class JSONUtil {
      *            root object
      * @param enumAsBean
      *            whether to serialized enums a Bean or name=value pair
+     * @param defaultDateFormat
      * @return JSON string
      * @throws JSONException
      */
     public static String serialize(Object object, Collection<Pattern> excludeProperties,
-            Collection<Pattern> includeProperties, boolean ignoreHierarchy, boolean enumAsBean,
-            boolean excludeNullProperties) throws JSONException {
+                                   Collection<Pattern> includeProperties, boolean ignoreHierarchy, boolean enumAsBean,
+                                   boolean excludeNullProperties, String defaultDateFormat) throws JSONException {
         JSONWriter writer = new JSONWriter();
         writer.setIgnoreHierarchy(ignoreHierarchy);
         writer.setEnumAsBean(enumAsBean);
+        writer.setDateFormatter(defaultDateFormat);
         return writer.write(object, excludeProperties, includeProperties, excludeNullProperties);
     }
 

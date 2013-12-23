@@ -1,10 +1,14 @@
 package org.apache.struts2.json;
 
 import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.json.annotations.JSON;
 import org.apache.struts2.json.annotations.JSONFieldBridge;
 import org.apache.struts2.json.bridge.StringBridge;
 import org.junit.Test;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.net.URL;
@@ -100,4 +104,32 @@ public class JSONWriterTest extends StrutsTestCase{
             this.url = url;
         }
     }
+
+    @Test
+    public void testCanSerializeADate() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
+        SingleDateBean dateBean = new SingleDateBean();
+        dateBean.setDate(sdf.parse("2012-12-23 10:10:10 GMT"));
+
+        JSONWriter jsonWriter = new JSONWriter();
+        jsonWriter.setEnumAsBean(false);
+        String json = jsonWriter.write(dateBean);
+        assertEquals("{\"date\":\"2012-12-23T21:10:10\"}", json);
+    }
+
+    @Test
+    public void testCanSetDefaultDateFormat() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
+        SingleDateBean dateBean = new SingleDateBean();
+        dateBean.setDate(sdf.parse("2012-12-23 10:10:10 GMT"));
+
+        JSONWriter jsonWriter = new JSONWriter();
+        jsonWriter.setEnumAsBean(false);
+        jsonWriter.setDateFormatter("MM-dd-yyyy");
+        String json = jsonWriter.write(dateBean);
+        assertEquals("{\"date\":\"12-23-2012\"}", json);
+    }
+
 }
