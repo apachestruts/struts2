@@ -30,5 +30,7 @@ package org.apache.struts2.dispatcher.mapper;
  * @since 2.1.0
  */
 public interface ParameterAction {
+
     void execute(String key, ActionMapping mapping);
+
 }

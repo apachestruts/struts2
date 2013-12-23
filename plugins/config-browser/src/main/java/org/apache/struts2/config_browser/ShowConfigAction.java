@@ -27,6 +27,7 @@ import com.opensymphony.xwork2.inject.Inject;
 import com.opensymphony.xwork2.util.logging.Logger;
 import com.opensymphony.xwork2.util.logging.LoggerFactory;
 import com.opensymphony.xwork2.util.reflection.ReflectionProvider;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.beans.PropertyDescriptor;
 import java.util.Set;
@@ -63,7 +64,7 @@ public class ShowConfigAction extends ActionNamesAction {
     }
 
     public String getNamespace() {
-        return namespace;
+        return StringEscapeUtils.escapeHtml4(namespace);
     }
     
     @Inject

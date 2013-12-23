@@ -47,7 +47,7 @@ import freemarker.template.TemplateModel;
 import freemarker.template.utility.StringUtil;
 import org.apache.struts2.StrutsConstants;
 import org.apache.struts2.views.JspSupportServlet;
-import org.apache.struts2.views.TagLibrary;
+import org.apache.struts2.views.TagLibraryModelProvider;
 import org.apache.struts2.views.util.ContextUtil;
 
 import javax.servlet.GenericServlet;
@@ -176,9 +176,10 @@ public class FreemarkerManager {
     protected boolean cacheBeanWrapper;
     protected int mruMaxStrongSize;
     protected String templateUpdateDelay;
-    protected Map<String,TagLibrary> tagLibraries;
+    protected Map<String,TagLibraryModelProvider> tagLibraries;
 
     private FileManager fileManager;
+    private FreemarkerThemeTemplateLoader themeTemplateLoader;
 
     @Inject(StrutsConstants.STRUTS_I18N_ENCODING)
     public void setEncoding(String encoding) {
@@ -207,10 +208,10 @@ public class FreemarkerManager {
     
     @Inject
     public void setContainer(Container container) {
-        Map<String,TagLibrary> map = new HashMap<String,TagLibrary>();
-        Set<String> prefixes = container.getInstanceNames(TagLibrary.class);
+        Map<String,TagLibraryModelProvider> map = new HashMap<String,TagLibraryModelProvider>();
+        Set<String> prefixes = container.getInstanceNames(TagLibraryModelProvider.class);
         for (String prefix : prefixes) {
-            map.put(prefix, container.getInstance(TagLibrary.class, prefix));
+            map.put(prefix, container.getInstance(TagLibraryModelProvider.class, prefix));
         }
         this.tagLibraries = Collections.unmodifiableMap(map);
     }
@@ -218,6 +219,11 @@ public class FreemarkerManager {
     @Inject
     public void setFileManagerFactory(FileManagerFactory fileManagerFactory) {
         this.fileManager = fileManagerFactory.getFileManager();
+    }
+
+    @Inject
+    public void setThemeTemplateLoader(FreemarkerThemeTemplateLoader themeTemplateLoader) {
+        this.themeTemplateLoader = themeTemplateLoader;
     }
 
     public boolean getNoCharsetInContentType() {
@@ -257,15 +263,9 @@ public class FreemarkerManager {
                     LOG.error("Cannot load freemarker configuration: ",e);
                 }
             }
-//            config = createConfiguration(servletContext);
-
             // store this configuration in the servlet context
             servletContext.setAttribute(CONFIG_SERVLET_CONTEXT_KEY, config);
-
-            config.setWhitespaceStripping(true);
         }
-
-
         return config;
     }
 
@@ -289,11 +289,22 @@ public class FreemarkerManager {
             templatePath = servletContext.getInitParameter("templatePath");
         }
 
-        config.setTemplateLoader(createTemplateLoader(servletContext, templatePath));
+        configureTemplateLoader(createTemplateLoader(servletContext, templatePath));
 
         loadSettings(servletContext);
     }
 
+    /** 
+     * Sets the Freemarker Configuration's template loader with the FreemarkerThemeTemplateLoader 
+     * at the top.
+     * 
+     * @see org.apache.struts2.views.freemarker.FreemarkerThemeTemplateLoader
+     */
+    protected void configureTemplateLoader(TemplateLoader templateLoader) {
+        themeTemplateLoader.init(templateLoader);
+        config.setTemplateLoader(themeTemplateLoader);
+    }
+    
     /**
      * Create the instance of the freemarker Configuration object.
      * <p/>
@@ -321,8 +332,7 @@ public class FreemarkerManager {
         if (encoding != null) {
             configuration.setDefaultEncoding(encoding);
         }
-
-
+        configuration.setLocalizedLookup(false);
         configuration.setWhitespaceStripping(true);
 
         return configuration;
@@ -520,7 +530,7 @@ public class FreemarkerManager {
         populateContext(model, stack, action, request, response);
         if (tagLibraries != null) {
             for (String prefix : tagLibraries.keySet()) {
-                model.put(prefix, tagLibraries.get(prefix).getFreemarkerModels(stack, request, response));
+                model.put(prefix, tagLibraries.get(prefix).getModels(stack, request, response));
             }
         }
 

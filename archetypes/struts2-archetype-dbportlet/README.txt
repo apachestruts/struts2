@@ -18,12 +18,17 @@ USAGE
     - the portlet war name   ->  myWebApp
 
 
-  mvn archetype:create -DgroupId=com.myCompany.myPortlet \
-                       -DartifactId=myWebApp \
-                       -DarchetypeGroupId=org.apache.struts \
-                       -DarchetypeArtifactId=struts2-archetype-dbportlet \
-                       -DarchetypeVersion=2.0.9-SNAPSHOT \
-                       -DremoteRepositories=http://people.apache.org/maven-snapshot-repository
+mvn archetype:generate -B -DgroupId=com.mycompany.mysystem \
+							-DartifactId=myWebApp \
+							-DarchetypeGroupId=org.apache.struts \
+							-DarchetypeArtifactId=struts2-archetype-dbportlet \
+							-DarchetypeVersion=<CURRENT_STRUTS_VERSION> \
+							-DremoteRepositories=http://struts.apache.org
+
+For more details about the Struts2 archetypes, please take a look at our Wiki page.
+
+-> https://cwiki.apache.org/confluence/display/WW/Struts+2+Maven+Archetypes
+
 
 - to compile, execute
   mvn compile

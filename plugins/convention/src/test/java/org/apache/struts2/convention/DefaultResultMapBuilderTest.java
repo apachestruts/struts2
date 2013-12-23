@@ -20,32 +20,34 @@
  */
 package org.apache.struts2.convention;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import javax.servlet.ServletContext;
-
-import junit.framework.TestCase;
-
-import static org.apache.struts2.convention.ReflectionTools.*;
-import org.apache.struts2.convention.actions.NoAnnotationAction;
-import org.apache.struts2.convention.actions.result.OverrideResultAction;
-import org.apache.struts2.convention.actions.result.ActionLevelResultAction;
-import org.apache.struts2.convention.actions.result.ActionLevelResultsAction;
-import org.apache.struts2.convention.actions.result.ClassLevelResultAction;
-import org.apache.struts2.convention.actions.result.ClassLevelResultsAction;
-import org.apache.struts2.convention.actions.result.InheritedResultExtends;
-import org.apache.struts2.convention.actions.result.InheritedResultsExtends;
-import org.apache.struts2.convention.actions.result.OverrideInheritedResultExtends;
-import org.apache.struts2.convention.actions.resultpath.ClassLevelResultPathAction;
-import org.apache.struts2.convention.annotation.Action;
-import org.easymock.EasyMock;
-import org.easymock.IAnswer;
-
 import com.opensymphony.xwork2.config.entities.PackageConfig;
 import com.opensymphony.xwork2.config.entities.ResultConfig;
 import com.opensymphony.xwork2.config.entities.ResultTypeConfig;
 import com.opensymphony.xwork2.inject.Container;
+import junit.framework.TestCase;
+import org.apache.struts2.convention.actions.NoAnnotationAction;
+import org.apache.struts2.convention.actions.result.ActionLevelResultAction;
+import org.apache.struts2.convention.actions.result.ActionLevelResultsAction;
+import org.apache.struts2.convention.actions.result.ClassLevelResultAction;
+import org.apache.struts2.convention.actions.result.ClassLevelResultsAction;
+import org.apache.struts2.convention.actions.result.GlobalResultAction;
+import org.apache.struts2.convention.actions.result.GlobalResultOverrideAction;
+import org.apache.struts2.convention.actions.result.InheritedResultExtends;
+import org.apache.struts2.convention.actions.result.InheritedResultsExtends;
+import org.apache.struts2.convention.actions.result.OverrideInheritedResultExtends;
+import org.apache.struts2.convention.actions.result.OverrideResultAction;
+import org.apache.struts2.convention.actions.resultpath.ClassLevelResultPathAction;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.dispatcher.ServletDispatcherResult;
+import org.easymock.EasyMock;
+import org.easymock.IAnswer;
+
+import javax.servlet.ServletContext;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.apache.struts2.convention.ReflectionTools.getAnnotation;
 
 /**
  * <p>
@@ -87,6 +89,65 @@ public class DefaultResultMapBuilderTest extends TestCase {
         ResultConfig result = results.get("error");
         assertNotNull(result);
         assertEquals("/WEB-INF/location/namespace/error-overriden.jsp", result.getParams().get("location"));
+    }
+
+    public void testGlobalResult() throws Exception {
+
+        ServletContext context = mockServletContext("/WEB-INF/location");
+        this.conventionsService = new ConventionsServiceImpl("/WEB-INF/location");
+        DefaultResultMapBuilder builder = new DefaultResultMapBuilder(context, container, "dispatcher,velocity,freemarker");
+
+        ResultTypeConfig resultType = new ResultTypeConfig.Builder("dispatcher", ServletDispatcherResult.class.getName()).
+                addParam("key", "value").addParam("key1", "value1").defaultResultParam("location").build();
+        ResultConfig globalError = new ResultConfig.Builder("error", ServletDispatcherResult.class.getName()).
+                addParam("location", "/globalError.jsp").
+                build();
+        PackageConfig packageConfig = new PackageConfig.Builder("package").
+                namespace("/namespace").
+                defaultResultType("dispatcher").
+                addResultTypeConfig(resultType).
+                addGlobalResultConfig(globalError).
+                build();
+
+
+        Map<String, ResultConfig> results = builder.build(GlobalResultAction.class, null, "action", packageConfig);
+        ResultConfig result = results.get("error");
+        assertNotNull(result);
+        assertEquals("/globalError.jsp", result.getParams().get("location"));
+    }
+
+    public void testGlobalResultOverride() throws Exception {
+
+        ServletContext context = EasyMock.createStrictMock(ServletContext.class);
+        String resultPath = "/WEB-INF/location";
+        // Setup some mock jsps
+        Set<String> resources = new HashSet<String>();
+        resources.add(resultPath + "/namespace/action.jsp");
+        resources.add(resultPath + "/namespace/action-success.jsp");
+        resources.add(resultPath + "/namespace/action-error.jsp");
+        EasyMock.expect(context.getResourcePaths(resultPath + "/namespace/")).andReturn(resources);
+        EasyMock.replay(context);
+
+        this.conventionsService = new ConventionsServiceImpl("/WEB-INF/location");
+        DefaultResultMapBuilder builder = new DefaultResultMapBuilder(context, container, "dispatcher,velocity,freemarker");
+
+        ResultTypeConfig resultType = new ResultTypeConfig.Builder("dispatcher", ServletDispatcherResult.class.getName()).
+                addParam("key", "value").addParam("key1", "value1").defaultResultParam("location").build();
+        ResultConfig globalError = new ResultConfig.Builder("error", ServletDispatcherResult.class.getName()).
+                addParam("location", "/globalError.jsp").
+                build();
+        PackageConfig packageConfig = new PackageConfig.Builder("package").
+                namespace("/namespace").
+                defaultResultType("dispatcher").
+                addResultTypeConfig(resultType).
+                addGlobalResultConfig(globalError).
+                build();
+
+
+        Map<String, ResultConfig> results = builder.build(GlobalResultOverrideAction.class, null, "action", packageConfig);
+        ResultConfig result = results.get("error");
+        assertNotNull(result);
+        assertEquals(resultPath + "/namespace/action-error.jsp", result.getParams().get("location"));
     }
 
     public void testNull() throws Exception {
@@ -166,6 +227,42 @@ public class DefaultResultMapBuilderTest extends TestCase {
         assertEquals("/WEB-INF/location/namespace/no-annotation-failure.jsp", results.get("failure").getParams().get("location"));
         EasyMock.verify(context);
 
+    }
+
+    public void testFromServletContextNotFlat() throws Exception {
+        ServletContext context = EasyMock.createStrictMock(ServletContext.class);
+
+        // Setup some mock jsps
+        Set<String> resources = new HashSet<String>();
+        resources.add("/WEB-INF/location/namespace/no-annotation/index.ftl");
+        resources.add("/WEB-INF/location/namespace/no-annotation/success.jsp");
+        resources.add("/WEB-INF/location/namespace/no-annotation/failure.jsp");
+        EasyMock.expect(context.getResourcePaths("/WEB-INF/location/namespace/no-annotation")).andReturn(resources);
+        EasyMock.replay(context);
+
+        PackageConfig packageConfig = createPackageConfigBuilder("/namespace");
+
+        this.conventionsService = new ConventionsServiceImpl("/WEB-INF/location");
+        DefaultResultMapBuilder builder = new DefaultResultMapBuilder(context, container, "dispatcher,velocity,freemarker");
+        builder.setFlatResultLayout("false");
+
+        Map<String, ResultConfig> results = builder.build(NoAnnotationAction.class, null, "no-annotation", packageConfig);
+
+        assertEquals(3, results.size());
+
+        assertEquals("success", results.get("success").getName());
+        assertEquals(3, results.get("success").getParams().size());
+        assertEquals("org.apache.struts2.dispatcher.ServletDispatcherResult", results.get("success").getClassName());
+        assertEquals("/WEB-INF/location/namespace/no-annotation/success.jsp", results.get("success").getParams().get("location"));
+
+        assertEquals(1, results.get("index").getParams().size());
+        assertEquals("org.apache.struts2.views.freemarker.FreemarkerResult", results.get("index").getClassName());
+        assertEquals("/WEB-INF/location/namespace/no-annotation/index.ftl", results.get("index").getParams().get("location"));
+
+        assertEquals(3, results.get("failure").getParams().size());
+        assertEquals("org.apache.struts2.dispatcher.ServletDispatcherResult", results.get("success").getClassName());
+        assertEquals("/WEB-INF/location/namespace/no-annotation/failure.jsp", results.get("failure").getParams().get("location"));
+        EasyMock.verify(context);
     }
 
     public void testIgnoreFilesWithoutName() throws Exception {

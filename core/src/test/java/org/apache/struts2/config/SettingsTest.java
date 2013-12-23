@@ -21,50 +21,53 @@
 
 package org.apache.struts2.config;
 
+import com.opensymphony.xwork2.util.LocalizedTextUtil;
+import org.apache.struts2.StrutsConstants;
+import org.apache.struts2.StrutsInternalTestCase;
+
 import java.util.Iterator;
 import java.util.Locale;
-
-import org.apache.struts2.StrutsConstants;
-import org.apache.struts2.StrutsTestCase;
-
-import com.opensymphony.xwork2.util.LocalizedTextUtil;
 
 
 /**
  * Unit test for {@link SettingsTest}.
  *
  */
-public class SettingsTest extends StrutsTestCase {
+public class SettingsTest extends StrutsInternalTestCase {
 
     public void testSettings() {
-        assertEquals("12345", Settings.get(StrutsConstants.STRUTS_MULTIPART_MAXSIZE));
-        assertEquals("\temp", Settings.get(StrutsConstants.STRUTS_MULTIPART_SAVEDIR));
+        Settings settings = new DefaultSettings();
 
-        assertEquals("test,org/apache/struts2/othertest", Settings.get( StrutsConstants.STRUTS_CUSTOM_PROPERTIES));
-        assertEquals("testvalue", Settings.get("testkey"));
-        assertEquals("othertestvalue", Settings.get("othertestkey"));
+        assertEquals("12345", settings.get(StrutsConstants.STRUTS_MULTIPART_MAXSIZE));
+        assertEquals("\temp", settings.get(StrutsConstants.STRUTS_MULTIPART_SAVEDIR));
 
-        int count = getKeyCount();
+        assertEquals("test,org/apache/struts2/othertest", settings.get( StrutsConstants.STRUTS_CUSTOM_PROPERTIES));
+        assertEquals("testvalue", settings.get("testkey"));
+        assertEquals("othertestvalue", settings.get("othertestkey"));
+
+        int count = getKeyCount(settings);
         assertEquals(12, count);
     }
 
     public void testDefaultResourceBundlesLoaded() {
-        assertEquals("testmessages,testmessages2", Settings.get(StrutsConstants.STRUTS_CUSTOM_I18N_RESOURCES));
+        Settings settings = new DefaultSettings();
+
+        assertEquals("testmessages,testmessages2", settings.get(StrutsConstants.STRUTS_CUSTOM_I18N_RESOURCES));
         assertEquals("This is a test message", LocalizedTextUtil.findDefaultText("default.testmessage", Locale.getDefault()));
         assertEquals("This is another test message", LocalizedTextUtil.findDefaultText("default.testmessage2", Locale.getDefault()));
     }
 
     public void testSetSettings() {
-        Settings.setInstance(new TestSettings());
+        Settings settings = new TestSettings();
 
         String keyName = "a.long.property.key.name";
-        assertEquals(keyName, Settings.get(keyName));
-        assertEquals(2, getKeyCount());
+        assertEquals(keyName, settings.get(keyName));
+        assertEquals(2, getKeyCount(settings));
     }
 
-    private int getKeyCount() {
+    private int getKeyCount(Settings settings) {
         int count = 0;
-        Iterator keyNames = Settings.list();
+        Iterator keyNames = settings.list();
 
         while (keyNames.hasNext()) {
             keyNames.next();

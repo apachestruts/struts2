@@ -29,8 +29,8 @@ import com.opensymphony.xwork2.util.fs.DefaultFileManagerFactory;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import org.apache.struts2.ServletActionContext;
+import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.StrutsStatics;
-import org.apache.struts2.StrutsTestCase;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
@@ -50,7 +50,7 @@ import static org.apache.struts2.views.jsp.AbstractUITagTest.normalize;
  * Test case for FreeMarkerResult.
  *
  */
-public class FreeMarkerResultTest extends StrutsTestCase {
+public class FreeMarkerResultTest extends StrutsInternalTestCase {
 
     ValueStack stack;
     MockActionInvocation invocation;
@@ -81,9 +81,7 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
 
         request.setRequestURI("/tutorial/test2.action");
-        Dispatcher dispatcher = Dispatcher.getInstance();
-        ActionMapping mapping = dispatcher.getContainer().getInstance(ActionMapper.class).getMapping(
-                    request, dispatcher.getConfigurationManager());
+        ActionMapping mapping = container.getInstance(ActionMapper.class).getMapping(request, configurationManager);
         dispatcher.serviceAction(request, response, servletContext, mapping);
         assertEquals("beforenestedafter", stringWriter.toString());
     }
@@ -107,9 +105,7 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
 
         request.setRequestURI("/tutorial/test5.action");
-        Dispatcher dispatcher = Dispatcher.getInstance();
-        ActionMapping mapping = dispatcher.getContainer().getInstance(ActionMapper.class).getMapping(
-                    request, dispatcher.getConfigurationManager());
+        ActionMapping mapping = container.getInstance(ActionMapper.class).getMapping(request, configurationManager);
         dispatcher.serviceAction(request, response, servletContext, mapping);
         assertEquals("beforenestedafter", stringWriter.toString());
     }
@@ -196,15 +192,19 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
         file = new File(ClassLoaderUtil.getResource("template/simple/css.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/css.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/css.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/scripting-events.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/scripting-events.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/scripting-events.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/common-attributes.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/common-attributes.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/common-attributes.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/dynamic-attributes.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/dynamic-attributes.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/dynamic-attributes.ftl")).andReturn(file.getAbsolutePath());
 
         EasyMock.expect(servletContext.getAttribute(FreemarkerManager.CONFIG_SERVLET_CONTEXT_KEY)).andReturn(freemarkerConfig).anyTimes();
         EasyMock.replay(servletContext);
@@ -214,8 +214,7 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
 
         request.setRequestURI("/tutorial/test6.action");
-        Dispatcher dispatcher = Dispatcher.getInstance();
-        ActionMapping mapping = dispatcher.getContainer().getInstance(ActionMapper.class).getMapping(request, dispatcher.getConfigurationManager());
+        ActionMapping mapping = container.getInstance(ActionMapper.class).getMapping(request, configurationManager);
         dispatcher.serviceAction(request, response, servletContext, mapping);
 
         // TODO lukaszlenart: remove expectedJDK15 and if() after switching to Java 1.6
@@ -253,15 +252,19 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
         file = new File(ClassLoaderUtil.getResource("template/simple/css.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/css.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/css.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/scripting-events.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/scripting-events.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/scripting-events.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/common-attributes.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/common-attributes.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/common-attributes.ftl")).andReturn(file.getAbsolutePath());
 
         file = new File(ClassLoaderUtil.getResource("template/simple/dynamic-attributes.ftl", getClass()).toURI());
         EasyMock.expect(servletContext.getRealPath("/template/simple/dynamic-attributes.ftl")).andReturn(file.getAbsolutePath());
+        EasyMock.expect(servletContext.getRealPath("/template/~~~simple/dynamic-attributes.ftl")).andReturn(file.getAbsolutePath());
 
         EasyMock.expect(servletContext.getAttribute(FreemarkerManager.CONFIG_SERVLET_CONTEXT_KEY)).andReturn(freemarkerConfig).anyTimes();
         EasyMock.replay(servletContext);
@@ -271,8 +274,7 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
 
         request.setRequestURI("/tutorial/test7.action");
-        Dispatcher dispatcher = Dispatcher.getInstance();
-        ActionMapping mapping = dispatcher.getContainer().getInstance(ActionMapper.class).getMapping(request, dispatcher.getConfigurationManager());
+        ActionMapping mapping = container.getInstance(ActionMapper.class).getMapping(request, configurationManager);
         dispatcher.serviceAction(request, response, servletContext, mapping);
         String expected = "<input type=\"radio\" name=\"client\" id=\"client_foo\" value=\"foo\"/><label for=\"client_foo\">foo</label>\n"
                 + "<input type=\"radio\" name=\"client\" id=\"client_bar\" value=\"bar\"/><label for=\"client_bar\">bar</label>\n"
@@ -302,8 +304,7 @@ public class FreeMarkerResultTest extends StrutsTestCase {
         ServletActionContext.setServletContext(servletContext);
 
         request.setRequestURI("/tutorial/test8.action");
-        Dispatcher dispatcher = Dispatcher.getInstance();
-        ActionMapping mapping = dispatcher.getContainer().getInstance(ActionMapper.class).getMapping(request, dispatcher.getConfigurationManager());
+        ActionMapping mapping = container.getInstance(ActionMapper.class).getMapping(request, configurationManager);
         dispatcher.serviceAction(request, response, servletContext, mapping);
         String expected = "<input type=\"text\"autofocus=\"autofocus\"/>";
         assertEquals(expected, stringWriter.toString());
@@ -313,9 +314,15 @@ public class FreeMarkerResultTest extends StrutsTestCase {
         super.setUp();
         mgr = new FreemarkerManager();
         mgr.setEncoding("UTF-8");
+
         DefaultFileManagerFactory factory = new DefaultFileManagerFactory();
         container.inject(factory);
         mgr.setFileManagerFactory(factory);
+
+        FreemarkerThemeTemplateLoader themeLoader = new FreemarkerThemeTemplateLoader();
+        container.inject(themeLoader);
+        mgr.setThemeTemplateLoader(themeLoader);
+
         stringWriter = new StringWriter();
         writer = new PrintWriter(stringWriter);
         response = new StrutsMockHttpServletResponse();
@@ -323,14 +330,17 @@ public class FreeMarkerResultTest extends StrutsTestCase {
         request = new MockHttpServletRequest();
         servletContext = new StrutsMockServletContext();
         stack = ActionContext.getContext().getValueStack();
+
         context = new ActionContext(stack.getContext());
         context.put(StrutsStatics.HTTP_RESPONSE, response);
         context.put(StrutsStatics.HTTP_REQUEST, request);
         context.put(StrutsStatics.SERVLET_CONTEXT, servletContext);
+
         ServletActionContext.setServletContext(servletContext);
         ServletActionContext.setRequest(request);
         ServletActionContext.setResponse(response);
         servletContext.setAttribute(FreemarkerManager.CONFIG_SERVLET_CONTEXT_KEY, null);
+
         invocation = new MockActionInvocation();
         invocation.setStack(stack);
         invocation.setInvocationContext(context);
@@ -349,4 +359,5 @@ public class FreeMarkerResultTest extends StrutsTestCase {
 
         super.tearDown();
     }
+
 }

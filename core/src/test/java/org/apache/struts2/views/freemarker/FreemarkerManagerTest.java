@@ -23,13 +23,13 @@ package org.apache.struts2.views.freemarker;
 
 import com.opensymphony.xwork2.util.fs.DefaultFileManagerFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.views.jsp.StrutsMockServletContext;
 
 /**
  * Test case for FreemarkerManager
  */
-public class FreemarkerManagerTest extends StrutsTestCase {
+public class FreemarkerManagerTest extends StrutsInternalTestCase {
 
     public void testIfStrutsEncodingIsSetProperty() throws Exception {
         FreemarkerManager mgr = new FreemarkerManager();
@@ -37,6 +37,7 @@ public class FreemarkerManagerTest extends StrutsTestCase {
         DefaultFileManagerFactory factory = new DefaultFileManagerFactory();
         container.inject(factory);
         mgr.setFileManagerFactory(factory);
+        mgr.setThemeTemplateLoader(new FreemarkerThemeTemplateLoader());
         StrutsMockServletContext servletContext = new StrutsMockServletContext();
         servletContext.setAttribute(FreemarkerManager.CONFIG_SERVLET_CONTEXT_KEY, null);
         freemarker.template.Configuration conf = mgr.getConfiguration(servletContext);

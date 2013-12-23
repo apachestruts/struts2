@@ -27,9 +27,9 @@ import com.opensymphony.xwork2.config.entities.ActionConfig;
 import com.opensymphony.xwork2.config.entities.ResultConfig;
 import com.opensymphony.xwork2.util.logging.Logger;
 import com.opensymphony.xwork2.util.logging.LoggerFactory;
-import org.apache.struts2.config.BeanSelectionProvider;
+import org.apache.struts2.config.DefaultBeanSelectionProvider;
 import org.apache.struts2.config.DefaultPropertiesProvider;
-import org.apache.struts2.config.LegacyPropertiesConfigurationProvider;
+import org.apache.struts2.config.PropertiesConfigurationProvider;
 import org.apache.struts2.config.StrutsXmlConfigurationProvider;
 import org.apache.struts2.sitegraph.entities.FreeMarkerView;
 import org.apache.struts2.sitegraph.entities.JspView;
@@ -75,8 +75,8 @@ public class StrutsConfigRetriever {
             cm.addContainerProvider(new DefaultPropertiesProvider());
             cm.addContainerProvider(new StrutsXmlConfigurationProvider("struts-default.xml", false, null));
             cm.addContainerProvider(configProvider);
-            cm.addContainerProvider(new LegacyPropertiesConfigurationProvider());
-            cm.addContainerProvider(new BeanSelectionProvider());
+            cm.addContainerProvider(new PropertiesConfigurationProvider());
+            cm.addContainerProvider(new DefaultBeanSelectionProvider());
             isXWorkStarted = true;
         } catch (IOException e) {
             LOG.error("IOException", e);

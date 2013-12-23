@@ -17,11 +17,15 @@ USAGE
 
 
   mvn archetype:generate -B -DgroupId=com.mycompany.mysystem \
-							-DartifactId=myWebApp \
-							-DarchetypeGroupId=org.apache.struts \
-							-DarchetypeArtifactId=struts2-archetype-convention \
-							-DarchetypeVersion=2.1.8 \
-							-DremoteRepositories=http://people.apache.org/repo/m2-snapshot-repository
+  							-DartifactId=myWebApp \
+  							-DarchetypeGroupId=org.apache.struts \
+  							-DarchetypeArtifactId=struts2-archetype-convention \
+  							-DarchetypeVersion=<CURRENT_STRUTS_VERSION> \
+  							-DremoteRepositories=http://struts.apache.org
+
+For more details about the Struts2 archetypes, please take a look at our Wiki page.
+
+-> https://cwiki.apache.org/confluence/display/WW/Struts+2+Maven+Archetypes
 
 IMPORTANT:
 ==========

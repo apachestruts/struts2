@@ -58,9 +58,9 @@ import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.StrutsConstants;
 import org.apache.struts2.StrutsException;
 import org.apache.struts2.StrutsStatics;
-import org.apache.struts2.config.BeanSelectionProvider;
+import org.apache.struts2.config.DefaultBeanSelectionProvider;
 import org.apache.struts2.config.DefaultPropertiesProvider;
-import org.apache.struts2.config.LegacyPropertiesConfigurationProvider;
+import org.apache.struts2.config.PropertiesConfigurationProvider;
 import org.apache.struts2.config.StrutsXmlConfigurationProvider;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.dispatcher.multipart.MultiPartRequest;
@@ -144,7 +144,7 @@ public class Dispatcher {
     private String multipartSaveDir;
 
     /**
-     * Stores the value of StrutsConstants.STRUTS_MULTIPART_HANDLER setting
+     * Stores the value of {@link StrutsConstants#STRUTS_MULTIPART_PARSER} setting
      */
     private String multipartHandlerName;
 
@@ -208,7 +208,6 @@ public class Dispatcher {
     private Map<String, String> initParams;
 
     private ValueStackFactory valueStackFactory;
-
 
     /**
      * Create the Dispatcher instance for a given ServletContext and set of initialization parameters.
@@ -367,7 +366,7 @@ public class Dispatcher {
     }
     
     private void init_LegacyStrutsProperties() {
-        configurationManager.addContainerProvider(new LegacyPropertiesConfigurationProvider());
+        configurationManager.addContainerProvider(new PropertiesConfigurationProvider());
     }
 
     private void init_TraditionalXmlConfigurations() {
@@ -439,17 +438,14 @@ public class Dispatcher {
     }
 
     private void init_AliasStandardObjects() {
-        configurationManager.addContainerProvider(new BeanSelectionProvider());
+        configurationManager.addContainerProvider(new DefaultBeanSelectionProvider());
     }
 
     private Container init_PreloadConfiguration() {
-        Configuration config = configurationManager.getConfiguration();
-        Container container = config.getContainer();
+        Container container = getContainer();
 
         boolean reloadi18n = Boolean.valueOf(container.getInstance(String.class, StrutsConstants.STRUTS_I18N_RELOAD));
         LocalizedTextUtil.setReloadBundles(reloadi18n);
-
-        ContainerHolder.store(container);
 
         return container;
     }
@@ -475,7 +471,7 @@ public class Dispatcher {
     public void init() {
 
     	if (configurationManager == null) {
-    		configurationManager = createConfigurationManager(BeanSelectionProvider.DEFAULT_BEAN_NAME);
+    		configurationManager = createConfigurationManager(DefaultBeanSelectionProvider.DEFAULT_BEAN_NAME);
     	}
 
         try {
@@ -549,8 +545,7 @@ public class Dispatcher {
             String name = mapping.getName();
             String method = mapping.getMethod();
 
-            Configuration config = configurationManager.getConfiguration();
-            ActionProxy proxy = config.getContainer().getInstance(ActionProxyFactory.class).createActionProxy(
+            ActionProxy proxy = getContainer().getInstance(ActionProxyFactory.class).createActionProxy(
                     namespace, name, method, extraContext, true, false);
 
             request.setAttribute(ServletActionContext.STRUTS_VALUESTACK_KEY, proxy.getInvocation().getStack());
@@ -665,7 +660,6 @@ public class Dispatcher {
         }
 
         extraContext.put(ActionContext.LOCALE, locale);
-        //extraContext.put(ActionContext.DEV_MODE, Boolean.valueOf(devMode));
 
         extraContext.put(StrutsStatics.HTTP_REQUEST, request);
         extraContext.put(StrutsStatics.HTTP_RESPONSE, response);

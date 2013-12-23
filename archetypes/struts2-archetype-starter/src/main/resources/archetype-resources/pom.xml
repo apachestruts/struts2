@@ -11,6 +11,7 @@
 
     <properties>
         <struts2.version>${project.version}</struts2.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
 	<dependencies>
@@ -119,7 +120,7 @@
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                     <webAppSourceDirectory>\${basedir}/src/main/webapp/</webAppSourceDirectory>
                     <webAppConfig>
-                        <contextPath>\${artifactId}</contextPath>
+                        <contextPath>/\${artifactId}</contextPath>
                         <descriptor>\${basedir}/src/main/webapp/WEB-INF/web.xml</descriptor>
                     </webAppConfig>
                 </configuration>

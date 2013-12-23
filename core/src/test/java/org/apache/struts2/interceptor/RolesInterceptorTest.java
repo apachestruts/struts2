@@ -21,14 +21,15 @@
 
 package org.apache.struts2.interceptor;
 
+import java.util.Arrays;
 import java.util.List;
 
-import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.StrutsInternalTestCase;
 
 import com.mockobjects.servlet.MockHttpServletRequest;
 import com.mockobjects.servlet.MockHttpServletResponse;
 
-public class RolesInterceptorTest extends StrutsTestCase {
+public class RolesInterceptorTest extends StrutsInternalTestCase {
 
     private RolesInterceptor interceptor = new RolesInterceptor();
 
@@ -78,10 +79,93 @@ public class RolesInterceptorTest extends StrutsTestCase {
 
     }
 
+    public void testIsAllowed_userAllowedAndGuestDisallowed() throws Exception {
+      MockHttpServletRequest request = new MockHttpServletRequest() {
+        public boolean isUserInRole(String role) {
+            return "user".equals(role) || "guest".equals(role);
+        }
+      };
+
+      interceptor.setAllowedRoles("user"); //has to be a user
+      interceptor.setDisallowedRoles("guest"); //and not a guest
+      assertFalse(interceptor.isAllowed(request, null));
+    }
+    
+    public void testIsAllowed_adminAllowedExceptManager() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest() {
+            public boolean isUserInRole(String role) {
+                return "admin".equals(role);
+            }
+        };
+
+        interceptor.setAllowedRoles("admin");//allow all
+        interceptor.setDisallowedRoles("manager");
+        assertTrue(interceptor.isAllowed(request, null));
+    }
+
+    public void testIsAllowed_sameRoleAllowedAndDisallowed() throws Exception {
+      MockHttpServletRequest request = new MockHttpServletRequest() {
+          public boolean isUserInRole(String role) {
+              return "admin".equals(role);
+          }
+      };
+      
+      interceptor.setAllowedRoles("admin");
+      interceptor.setDisallowedRoles("admin");
+      assertFalse(interceptor.isAllowed(request, null));
+    }
+
+    
+    public void testIsAllowed_emptyAllowedAndDisallowed() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest() {
+            public boolean isUserInRole(String role) {
+                return "admin".equals(role);
+            }
+        };
+
+        interceptor.setAllowedRoles("");//allow all
+        interceptor.setDisallowedRoles("admin");
+        assertFalse(interceptor.isAllowed(request, null));
+    }
+
     public void testHandleRejection() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         response.setExpectedError(response.SC_FORBIDDEN);
         interceptor.handleRejection(null, response);
         response.verify();
+    }
+    
+    public void testAreRolesValid() throws Exception {
+        RolesInterceptor roleCheckInterceptor = new RolesInterceptor(){
+            List<String> validRoles = Arrays.asList(new String[]{"admin","user"});
+            @Override
+            public boolean areRolesValid(List<String> roles){
+                return validRoles.containsAll(roles);
+            }
+        };
+        try {
+            roleCheckInterceptor.setAllowedRoles("admin, user");
+            roleCheckInterceptor.setDisallowedRoles("admin, user");
+        } catch (Exception e){
+            fail("Valid roles should not throw an exception");
+        }
+        try {
+            roleCheckInterceptor.setAllowedRoles("hacker, abuser");
+            fail("Invalid roles should throw an exception");
+        } catch (Exception e){ 
+            //expected  
+        }
+        try {
+            roleCheckInterceptor.setAllowedRoles("nonadmin, nonuser");
+            fail("Invalid roles should throw an exception");
+        } catch (Exception e){ 
+            //expected  
+        }
+        try {
+            roleCheckInterceptor.intercept(null);
+            fail("A misconfigured should always throw an exception");
+        } catch (Exception e){
+            //expected;
+        }
     }
 }

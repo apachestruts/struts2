@@ -9,7 +9,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>struts2-parent</artifactId>
-    <version>2.3.16-SNAPSHOT</version>
+    <version>2.3.17-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Struts 2</name>
     <url>http://struts.apache.org/2.x/</url>
@@ -93,6 +93,7 @@
         <siteContent.path>${site.mainDirectory}/staging</siteContent.path>
         <scmCheckout.path>${site.mainDirectory}/scm</scmCheckout.path>
         <siteDeploy.url>file://${siteContent.path}</siteDeploy.url>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <profiles>

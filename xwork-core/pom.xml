@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.apache.struts</groupId>
         <artifactId>struts2-parent</artifactId>
-        <version>2.3.16-SNAPSHOT</version>
+        <version>2.3.17-SNAPSHOT</version>
     </parent>
 
     <groupId>org.apache.struts.xwork</groupId>
@@ -21,6 +21,7 @@
 
     <properties>
         <currentVersion>${project.version}</currentVersion>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <build>

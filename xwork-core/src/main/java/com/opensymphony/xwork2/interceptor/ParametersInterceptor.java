@@ -23,12 +23,23 @@ import com.opensymphony.xwork2.conversion.impl.InstantiatingNullHandler;
 import com.opensymphony.xwork2.conversion.impl.XWorkConverter;
 import com.opensymphony.xwork2.inject.Inject;
 import com.opensymphony.xwork2.ognl.PropertiesJudge;
-import com.opensymphony.xwork2.util.*;
+import com.opensymphony.xwork2.util.ArrayUtils;
+import com.opensymphony.xwork2.util.ClearableValueStack;
+import com.opensymphony.xwork2.util.LocalizedTextUtil;
+import com.opensymphony.xwork2.util.MemberAccessValueStack;
+import com.opensymphony.xwork2.util.ValueStack;
+import com.opensymphony.xwork2.util.ValueStackFactory;
 import com.opensymphony.xwork2.util.logging.Logger;
 import com.opensymphony.xwork2.util.logging.LoggerFactory;
 import com.opensymphony.xwork2.util.reflection.ReflectionContextState;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -144,8 +155,7 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
     private boolean devMode = false;
 
     // Allowed names of parameters
-    private String acceptedParamNames = ACCEPTED_PARAM_NAMES;
-    private Pattern acceptedPattern = Pattern.compile(acceptedParamNames);
+    private Pattern acceptedPattern = Pattern.compile(ACCEPTED_PARAM_NAMES);
 
     private ValueStackFactory valueStackFactory;
 
@@ -319,13 +329,7 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
                 newStack.setParameter(name, value);
             } catch (RuntimeException e) {
                 if (devMode) {
-                    String developerNotification = LocalizedTextUtil.findText(ParametersInterceptor.class, "devmode.notification", ActionContext.getContext().getLocale(), "Developer Notification:\n{0}", new Object[]{
-                             "Unexpected Exception caught setting '" + name + "' on '" + action.getClass() + ": " + e.getMessage()
-                    });
-                    LOG.error(developerNotification, e);
-                    if (action instanceof ValidationAware) {
-                        ((ValidationAware) action).addActionMessage(developerNotification);
-                    }
+                    notifyDeveloper(action, name, e.getMessage());
                 }
             }
         }
@@ -334,6 +338,22 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
             stack.getContext().put(ActionContext.CONVERSION_ERRORS, newStack.getContext().get(ActionContext.CONVERSION_ERRORS));
 
         addParametersToContext(ActionContext.getContext(), acceptableParameters);
+    }
+
+    protected void notifyDeveloper(Object action, String property, String message) {
+        String developerNotification = LocalizedTextUtil.findText(ParametersInterceptor.class, "devmode.notification",
+                ActionContext.getContext().getLocale(), "Developer Notification:\n{0}",
+                new Object[]{
+                        "Unexpected Exception caught setting '" + property + "' on '" + action.getClass() + ": " + message
+                }
+        );
+        LOG.error(developerNotification);
+        // see https://issues.apache.org/jira/browse/WW-4066
+        if (action instanceof ValidationAware) {
+            Collection<String> messages = ((ValidationAware) action).getActionMessages();
+            messages.add(message);
+            ((ValidationAware) action).setActionMessages(messages);
+        }
     }
 
     /**
@@ -345,7 +365,7 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
      */
     protected boolean isAcceptableParameter(String name, Object action) {
         ParameterNameAware parameterNameAware = (action instanceof ParameterNameAware) ? (ParameterNameAware) action : null;
-        return acceptableName(name) || (parameterNameAware != null && parameterNameAware.acceptableParameterName(name));
+        return acceptableName(name) && (parameterNameAware == null || parameterNameAware.acceptableParameterName(name));
     }
 
     /**
@@ -389,7 +409,7 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
     }
 
     protected boolean acceptableName(String name) {
-        boolean accepted = isWithinLengthLimit(name) && isAccepted(name) && !isExcluded(name);
+        boolean accepted = isWithinLengthLimit(name) && !isExcluded(name) && isAccepted(name);
         if (devMode && accepted) { // notify only when in devMode
             LOG.debug("Parameter [#0] was accepted and will be appended to action!", name);
         }

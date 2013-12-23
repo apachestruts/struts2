@@ -57,26 +57,17 @@ import java.util.regex.Pattern;
  * execution behaviour. The four prefixes are:
  * <p/>
  * <ul>
- * <p/>
  * <li>Method prefix - <i>method:default</i></li>
- * <p/>
  * <li>Action prefix - <i>action:dashboard</i></li>
- * <p/>
- * <li>Redirect prefix - <i>redirect:cancel.jsp</i></li>
- * <p/>
- * <li>Redirect-action prefix - <i>redirectAction:cancel</i></li>
- * <p/>
  * </ul>
  * <p/>
- * <p/> In addition to these four prefixes, this mapper also understands the
+ * In addition to these four prefixes, this mapper also understands the
  * action naming pattern of <i>foo!bar</i> in either the extension form (eg:
  * foo!bar.action) or in the prefix form (eg: action:foo!bar). This syntax tells
  * this mapper to map to the action named <i>foo</i> and the method <i>bar</i>.
  * <p/>
  * <!-- END SNIPPET: javadoc -->
- * <p/>
- * <p/> <b>Method Prefix</b> <p/>
- * <p/>
+ * <b>Method Prefix</b>
  * <!-- START SNIPPET: method -->
  * <p/>
  * With method-prefix, instead of calling baz action's execute() method (by
@@ -93,13 +84,11 @@ import java.util.regex.Pattern;
  *  &lt;s:form action=&quot;baz&quot;&gt;
  *      &lt;s:textfield label=&quot;Enter your name&quot; name=&quot;person.name&quot;/&gt;
  *      &lt;s:submit value=&quot;Create person&quot;/&gt;
- *      &lt;s:submit name=&quot;method:anotherMethod&quot; value=&quot;Cancel&quot;/&gt;
+ *      &lt;s:submit method=&quot;anotherMethod&quot; value=&quot;Cancel&quot;/&gt;
  *  &lt;/s:form&gt;
  *  &lt;!-- END SNIPPET: method-example --&gt;
  * </pre>
- * <p/>
- * <p/> <b>Action prefix</b> <p/>
- * <p/>
+ * <b>Action prefix</b>
  * <!-- START SNIPPET: action -->
  * <p/>
  * With action-prefix, instead of executing baz action's execute() method (by
@@ -114,52 +103,9 @@ import java.util.regex.Pattern;
  *  &lt;s:form action=&quot;baz&quot;&gt;
  *      &lt;s:textfield label=&quot;Enter your name&quot; name=&quot;person.name&quot;/&gt;
  *      &lt;s:submit value=&quot;Create person&quot;/&gt;
- *      &lt;s:submit name=&quot;action:anotherAction&quot; value=&quot;Cancel&quot;/&gt;
+ *      &lt;s:submit action=&quot;anotherAction&quot; value=&quot;Cancel&quot;/&gt;
  *  &lt;/s:form&gt;
  *  &lt;!-- END SNIPPET: action-example --&gt;
- * </pre>
- * <p/>
- * <p/> <b>Redirect prefix</b> <p/>
- * <p/>
- * <!-- START SNIPPET: redirect -->
- * <p/>
- * With redirect-prefix, instead of executing baz action's execute() method (by
- * default it isn't overriden in struts.xml to be something else), it will get
- * redirected to, in this case to www.google.com. Internally it uses
- * ServletRedirectResult to do the task.
- * <p/>
- * <!-- END SNIPPET: redirect -->
- * <p/>
- * <pre>
- *  &lt;!-- START SNIPPET: redirect-example --&gt;
- *  &lt;s:form action=&quot;baz&quot;&gt;
- *      &lt;s:textfield label=&quot;Enter your name&quot; name=&quot;person.name&quot;/&gt;
- *      &lt;s:submit value=&quot;Create person&quot;/&gt;
- *      &lt;s:submit name=&quot;redirect:www.google.com&quot; value=&quot;Cancel&quot;/&gt;
- *  &lt;/s:form&gt;
- *  &lt;!-- END SNIPPET: redirect-example --&gt;
- * </pre>
- * <p/>
- * <p/> <b>Redirect-action prefix</b> <p/>
- * <p/>
- * <!-- START SNIPPET: redirect-action -->
- * <p/>
- * With redirect-action-prefix, instead of executing baz action's execute()
- * method (by default it isn't overriden in struts.xml to be something else), it
- * will get redirected to, in this case 'dashboard.action'. Internally it uses
- * ServletRedirectResult to do the task and read off the extension from the
- * struts.properties.
- * <p/>
- * <!-- END SNIPPET: redirect-action -->
- * <p/>
- * <pre>
- *  &lt;!-- START SNIPPET: redirect-action-example --&gt;
- *  &lt;s:form action=&quot;baz&quot;&gt;
- *      &lt;s:textfield label=&quot;Enter your name&quot; name=&quot;person.name&quot;/&gt;
- *      &lt;s:submit value=&quot;Create person&quot;/&gt;
- *      &lt;s:submit name=&quot;redirectAction:dashboard&quot; value=&quot;Cancel&quot;/&gt;
- *  &lt;/s:form&gt;
- *  &lt;!-- END SNIPPET: redirect-action-example --&gt;
  * </pre>
  */
 public class DefaultActionMapper implements ActionMapper {
@@ -169,11 +115,13 @@ public class DefaultActionMapper implements ActionMapper {
     protected static final String METHOD_PREFIX = "method:";
     protected static final String ACTION_PREFIX = "action:";
 
-    protected boolean allowDynamicMethodCalls = true;
+    protected boolean allowDynamicMethodCalls = false;
     protected boolean allowSlashesInActionNames = false;
     protected boolean alwaysSelectFullNamespace = false;
     protected PrefixTrie prefixTrie = null;
     protected Pattern allowedActionNames = Pattern.compile("[a-zA-Z0-9._!/\\-]*");
+    private boolean allowActionPrefix = false;
+    private boolean allowActionCrossNamespaceAccess = false;
 
     protected List<String> extensions = new ArrayList<String>() {{
         add("action");
@@ -194,17 +142,30 @@ public class DefaultActionMapper implements ActionMapper {
                 });
 
                 put(ACTION_PREFIX, new ParameterAction() {
-                    public void execute(String key, ActionMapping mapping) {
-                        String name = key.substring(ACTION_PREFIX.length());
-                        if (allowDynamicMethodCalls) {
-                            int bang = name.indexOf('!');
-                            if (bang != -1) {
-                                String method = name.substring(bang + 1);
-                                mapping.setMethod(method);
-                                name = name.substring(0, bang);
+                    public void execute(final String key, ActionMapping mapping) {
+                        if (allowActionPrefix) {
+                            String name = key.substring(ACTION_PREFIX.length());
+                            if (allowDynamicMethodCalls) {
+                                int bang = name.indexOf('!');
+                                if (bang != -1) {
+                                    String method = name.substring(bang + 1);
+                                    mapping.setMethod(method);
+                                    name = name.substring(0, bang);
+                                }
                             }
+                            String actionName = cleanupActionName(name);
+                            if (allowSlashesInActionNames && !allowActionCrossNamespaceAccess) {
+                                if (actionName.startsWith("/")) {
+                                    actionName = actionName.substring(1);
+                                }
+                            }
+                            if (!allowSlashesInActionNames && !allowActionCrossNamespaceAccess) {
+                                if (actionName.lastIndexOf("/") != -1) {
+                                    actionName = actionName.substring(actionName.lastIndexOf("/") + 1);
+                                }
+                            }
+                            mapping.setName(actionName);
                         }
-                        mapping.setName(cleanupActionName(name));
                     }
                 });
 
@@ -225,7 +186,7 @@ public class DefaultActionMapper implements ActionMapper {
 
     @Inject(StrutsConstants.STRUTS_ENABLE_DYNAMIC_METHOD_INVOCATION)
     public void setAllowDynamicMethodCalls(String allow) {
-        allowDynamicMethodCalls = "true".equals(allow);
+        allowDynamicMethodCalls = "true".equalsIgnoreCase(allow);
     }
 
     @Inject(StrutsConstants.STRUTS_ENABLE_SLASHES_IN_ACTION_NAMES)
@@ -241,6 +202,16 @@ public class DefaultActionMapper implements ActionMapper {
     @Inject(value = StrutsConstants.STRUTS_ALLOWED_ACTION_NAMES, required = false)
     public void setAllowedActionNames(String allowedActionNames) {
         this.allowedActionNames = Pattern.compile(allowedActionNames);
+    }
+
+    @Inject(value = StrutsConstants.STRUTS_MAPPER_ACTION_PREFIX_ENABLED)
+    public void setAllowActionPrefix(String allowActionPrefix) {
+        this.allowActionPrefix = "true".equalsIgnoreCase(allowActionPrefix);
+    }
+
+    @Inject(value = StrutsConstants.STRUTS_MAPPER_ACTION_PREFIX_CROSSNAMESPACES)
+    public void setAllowActionCrossNamespaceAccess(String allowActionCrossNamespaceAccess) {
+        this.allowActionCrossNamespaceAccess = "true".equalsIgnoreCase(allowActionCrossNamespaceAccess);
     }
 
     @Inject
@@ -280,7 +251,7 @@ public class DefaultActionMapper implements ActionMapper {
      */
     public ActionMapping getMapping(HttpServletRequest request, ConfigurationManager configManager) {
         ActionMapping mapping = new ActionMapping();
-        String uri = getUri(request);
+        String uri = RequestUtils.getUri(request);
 
         int indexOfSemicolon = uri.indexOf(";");
         uri = (indexOfSemicolon > -1) ? uri.substring(0, indexOfSemicolon) : uri;
@@ -372,8 +343,8 @@ public class DefaultActionMapper implements ActionMapper {
             namespace = "";
             boolean rootAvailable = false;
             // Find the longest matching namespace, defaulting to the default
-            for (Object cfg : config.getPackageConfigs().values()) {
-                String ns = ((PackageConfig) cfg).getNamespace();
+            for (PackageConfig cfg : config.getPackageConfigs().values()) {
+                String ns = cfg.getNamespace();
                 if (ns != null && prefix.startsWith(ns) && (prefix.length() == ns.length() || prefix.charAt(ns.length()) == '/')) {
                     if (ns.length() > namespace.length()) {
                         namespace = ns;
@@ -418,7 +389,7 @@ public class DefaultActionMapper implements ActionMapper {
                         rawActionName, allowedActionNames);
             }
             String cleanActionName = rawActionName;
-            for(String chunk : allowedActionNames.split(rawActionName)) {
+            for (String chunk : allowedActionNames.split(rawActionName)) {
                 cleanActionName = cleanActionName.replace(chunk, "");
             }
             if (LOG.isDebugEnabled()) {
@@ -480,29 +451,6 @@ public class DefaultActionMapper implements ActionMapper {
         } else {
             return extensions.get(0);
         }
-    }
-
-    /**
-     * Gets the uri from the request
-     *
-     * @param request The request
-     * @return The uri
-     */
-    protected String getUri(HttpServletRequest request) {
-        // handle http dispatcher includes.
-        String uri = (String) request
-                .getAttribute("javax.servlet.include.servlet_path");
-        if (uri != null) {
-            return uri;
-        }
-
-        uri = RequestUtils.getServletPath(request);
-        if (uri != null && !"".equals(uri)) {
-            return uri;
-        }
-
-        uri = request.getRequestURI();
-        return uri.substring(request.getContextPath().length());
     }
 
     /*

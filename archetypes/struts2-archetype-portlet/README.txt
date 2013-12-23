@@ -9,7 +9,12 @@ USAGE
 =====
 
 1- Generate your archetype
-- mvn archetype:generate -DartifactId=struts2-portlet-helloworld  -DgroupId=com.mycompany.struts2.portlet -Dversion=1.0.0-SNAPSHOT -DarchetypeGroupId=org.apache.struts -DarchetypeArtifactId=struts2-archetype-portlet -DarchetypeVersion=2.3.8
+mvn archetype:generate -B -DgroupId=com.mycompany.mysystem \
+							-DartifactId=myWebApp \
+							-DarchetypeGroupId=org.apache.struts \
+							-DarchetypeArtifactId=struts2-archetype-portlet \
+							-DarchetypeVersion=<CURRENT_STRUTS_VERSION> \
+							-DremoteRepositories=http://struts.apache.org
 
 2- Build your portlet project for Pluto Portal
 - cd struts2-portlet-helloworld
@@ -33,6 +38,10 @@ USAGE
 6- Test your portlet app
 - Go to your Struts2 page http://localhost:8080/pluto/portal/Struts2 and play with your portlet !!
 
+
+For more details about the Struts2 archetypes, please take a look at our Wiki page.
+
+-> https://cwiki.apache.org/confluence/display/WW/Struts+2+Maven+Archetypes
 
 
 

@@ -21,13 +21,12 @@
 
 package org.apache.struts2.components;
 
-import java.io.Writer;
-
+import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.StrutsException;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
-import org.apache.struts2.StrutsException;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import java.io.Writer;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -45,6 +44,7 @@ import com.opensymphony.xwork2.util.ValueStack;
  * <ul>
  *      <li>name (String) - the name of the parameter</li>
  *      <li>value (Object) - the value of the parameter</li>
+ *      <li>suppressEmptyParameters (boolean) - whether to suppress empty parameters</li>
  * </ul>
  * <!-- END SNIPPET: params -->
  * <p/>
@@ -56,7 +56,7 @@ import com.opensymphony.xwork2.util.ValueStack;
  * <br/>&lt;param name="color" value="blue"/&gt; &lt;-- (B) --&gt;
  * <br/>In the first situation (A) the value would be evaluated to the stack as a <tt>java.lang.String</tt> object.
  * And in situation (B) the value would be evaluated to the stack as a <tt>java.lang.Object</tt> object.
- * <br/>For more information see <a href="http://jira.opensymphony.com/browse/WW-808">WW-808</a>.
+ * <br/>For more information see <a href="https://issues.apache.org/jira/browse/WW-808">WW-808</a>.
  * <!-- END SNIPPET: javadoc -->
  *
  * <p/> <b>Examples</b>
@@ -67,6 +67,17 @@ import com.opensymphony.xwork2.util.ValueStack;
  *  &lt;ui:param name="value"   value="[1]"/&gt;
  *  &lt;ui:param name="context" value="[2]"/&gt;
  * &lt;/ui:component&gt;
+ * </pre>
+ * <p/>
+ * Whether to suppress empty parameters:
+ * <pre>
+ * &lt;s:a action="eventAdd" accesskey="a"&gt;
+ *   &lt;s:text name="title.heading.eventadd" /&gt;
+ *   &lt;s:param name="bean.searchString" value="%{bean.searchString}" /&gt;
+ *   &lt;s:param name="bean.filter" value="%{bean.filter}" /&gt;
+ *   &lt;s:param name="bean.pageNum" value="%{pager.pageNumber}" /&gt;
+ *   &lt;s:param name="suppressEmptyParameters" value="true"/&gt;
+ * &lt;/s:a&gt;
  * </pre>
  * <!-- END SNIPPET: example -->
  * <p/>
@@ -92,8 +103,10 @@ import com.opensymphony.xwork2.util.ValueStack;
  */
 @StrutsTag(name="param", tldTagClass="org.apache.struts2.views.jsp.ParamTag", description="Parametrize other tags")
 public class Param extends Component {
+
     protected String name;
     protected String value;
+    protected boolean suppressEmptyParameters;
 
     public Param(ValueStack stack) {
         super(stack);
@@ -112,7 +125,14 @@ public class Param extends Component {
                 }
 
                 Object value = findValue(this.value);
-                component.addParameter(name, value);
+                if (suppressEmptyParameters) {
+                    String potentialValue = (String) value;
+                    if (potentialValue != null && potentialValue.length() > 0) {
+                        component.addParameter(name, value);
+                    }
+                } else {
+                    component.addParameter(name, value);
+                }
             }
         } else {
             if (component instanceof UnnamedParametric) {
@@ -124,7 +144,7 @@ public class Param extends Component {
 
         return super.end(writer, "");
     }
-
+    
     public boolean usesBody() {
         return true;
     }
@@ -137,6 +157,11 @@ public class Param extends Component {
     @StrutsTagAttribute(description="Value expression for Parameter to set", defaultValue="The value of evaluating provided name against stack")
     public void setValue(String value) {
         this.value = value;
+    }
+    
+    @StrutsTagAttribute(description="Whether to suppress empty parameters", type="Boolean", defaultValue="false")
+    public void setSuppressEmptyParameters(boolean suppressEmptyParameters) {
+        this.suppressEmptyParameters = suppressEmptyParameters;
     }
     
     /**

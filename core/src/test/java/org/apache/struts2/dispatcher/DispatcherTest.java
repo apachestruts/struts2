@@ -34,14 +34,17 @@ import com.opensymphony.xwork2.inject.Container;
 import com.opensymphony.xwork2.interceptor.Interceptor;
 import com.opensymphony.xwork2.util.LocalizedTextUtil;
 import org.apache.struts2.StrutsConstants;
-import org.apache.struts2.StrutsTestCase;
+import org.apache.struts2.StrutsInternalTestCase;
 import org.apache.struts2.dispatcher.FilterDispatcherTest.InnerDestroyableObjectFactory;
+import org.apache.struts2.dispatcher.multipart.MultiPartRequestWrapper;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -50,7 +53,7 @@ import java.util.Map;
  * Test case for Dispatcher.
  *
  */
-public class DispatcherTest extends StrutsTestCase {
+public class DispatcherTest extends StrutsInternalTestCase {
 
     public void testDefaultResurceBundlePropertyLoaded() throws Exception {
         Locale.setDefault(Locale.US); // force to US locale as we also have _de and _da properties
@@ -134,6 +137,19 @@ public class DispatcherTest extends StrutsTestCase {
         assertEquals("utf-8", req.getCharacterEncoding());
     }
     
+    public void testPrepareMultipartRequest() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        ServletContext ctx = new MockServletContext();
+
+        req.setContentType("multipart/form-data");
+        Dispatcher du = initDispatcher(Collections.<String, String>emptyMap());
+        du.prepare(req, res);
+        HttpServletRequest wrapped = du.wrapRequest(req, ctx);
+
+        assertTrue(wrapped instanceof MultiPartRequestWrapper);
+    }
+
     public void testDispatcherListener() throws Exception {
     	
     	final DispatcherListenerState state = new DispatcherListenerState();
@@ -156,7 +172,7 @@ public class DispatcherTest extends StrutsTestCase {
     	assertTrue(state.isInitialized);
     	
     	du.cleanup();
-    	
+
     	assertTrue(state.isDestroyed);
     }
     
@@ -194,8 +210,6 @@ public class DispatcherTest extends StrutsTestCase {
         
         Mock mockContainer = new Mock(Container.class);
         String reloadConfigs = container.getInstance(String.class, XWorkConstants.RELOAD_XML_CONFIGURATION);
-        mockContainer.expectAndReturn("getInstance", C.args(C.eq(String.class), C.eq(StrutsConstants.STRUTS_CONFIGURATION_XML_RELOAD)),
-                reloadConfigs);
         mockContainer.expectAndReturn("getInstance", C.args(C.eq(String.class), C.eq(XWorkConstants.RELOAD_XML_CONFIGURATION)),
                 reloadConfigs);
         mockContainer.expectAndReturn("getInstance", C.args(C.eq(ObjectFactory.class)), destroyedObjectFactory);
@@ -230,8 +244,6 @@ public class DispatcherTest extends StrutsTestCase {
         Mock mockContainer = new Mock(Container.class);
         mockContainer.matchAndReturn("getInstance", C.args(C.eq(ObjectFactory.class)), new ObjectFactory());
         String reloadConfigs = container.getInstance(String.class, XWorkConstants.RELOAD_XML_CONFIGURATION);
-        mockContainer.expectAndReturn("getInstance", C.args(C.eq(String.class), C.eq(StrutsConstants.STRUTS_CONFIGURATION_XML_RELOAD)),
-                reloadConfigs);
         mockContainer.expectAndReturn("getInstance", C.args(C.eq(String.class), C.eq(XWorkConstants.RELOAD_XML_CONFIGURATION)),
                 reloadConfigs);
 

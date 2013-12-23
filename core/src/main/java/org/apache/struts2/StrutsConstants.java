@@ -129,6 +129,9 @@ public final class StrutsConstants {
     /** The default UI template theme */
     public static final String STRUTS_UI_THEME = "struts.ui.theme";
 
+    /** Token to use to indicate start of theme to be expanded. */
+    public static final String STRUTS_UI_THEME_EXPANSION_TOKEN = "struts.ui.theme.expansion.token";
+
     /** The maximize size of a multipart request (file upload) */
     public static final String STRUTS_MULTIPART_MAXSIZE = "struts.multipart.maxSize";
 
@@ -267,5 +270,13 @@ public final class StrutsConstants {
 
     /** actions names' whitelist **/
     public static final String STRUTS_ALLOWED_ACTION_NAMES = "struts.allowed.action.names";
+
+    /** enables action: prefix **/
+    public static final String STRUTS_MAPPER_ACTION_PREFIX_ENABLED = "struts.mapper.action.prefix.enabled";
+
+    /** enables access to actions in other namespaces than current with action: prefix **/
+    public static final String STRUTS_MAPPER_ACTION_PREFIX_CROSSNAMESPACES = "struts.mapper.action.prefix.crossNamespaces";
+
+    public static final String DEFAULT_TEMPLATE_TYPE_CONFIG_KEY = "struts.ui.templateSuffix";
 
 }
